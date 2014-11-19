@@ -17,6 +17,7 @@ C_SRCS	= $(shell ls $(SUBDIRS)/*.c)
 C_OBJS	= $(subst .c,.rel,$(C_SRCS))
 C_RELS	= $(subst $(SUBDIRS),$(ODIR)/$(SUBDIRS),$(C_OBJS))
 C_DEPS	= $(subst .rel,.d,$(C_RELS))
+C_PREP	= $(subst .rel,.i,$(C_RELS))
 
 YEARMONTH  = `date +'%Y-%b'`
 DATETIME   = `date +'%Y-%m%d-%H%M%S-%a'`
@@ -61,13 +62,18 @@ PREPARE_DIR:
 
 $(ODIR)/%.rel: %.c | PREPARE_DIR
 	@echo 'Building file: $<'
-	sdcpp -I"C:/Program Files/SDCC/include" $(INC) $< -o $(@:%.rel=%.i) -D__SDCC 
-#	sdcpp $(INC) -I"C:/Program Files/SDCC/include" $< -o $(@:%.rel=%.ikeil)
 	$(CC) -c $(INC) $(CFLAGS) -o $@ $< && \
 	echo -n $(@:%.rel=%.d) $(dir $@) > $(@:%.rel=%.d) && \
 	$(CC) -c -MM $(INC) $(CFLAGS) $< >> $(@:%.rel=%.d)
 	@echo 'Finished building: $<'
 	@echo ''
+
+preprocessor: $(C_PREP)
+
+
+$(ODIR)/%.i: %.c | PREPARE_DIR
+	sdcpp -D__SDCC -I"C:/Program Files/SDCC/include" $(INC) $< -o $@
+#	sdcpp          -I"C:/Program Files/SDCC/include" $(INC) $< -o $(@:%.i=%.keil)
 
 
 post-build:
