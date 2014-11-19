@@ -1,0 +1,30 @@
+Backup files
+
+1. Makefile.eclipse_SDCC
+   Makefile for using cross compiler SDCC on eclipse. This Makefile is used for
+   users that fail to install eclipseSDCC. Please place your source files and
+   Makefile with following folder structures.
+   Project_root
+     |___ hex        - Created by Makefile that backup compiled *.hex
+     |___ inc        - Geader files
+     |___ output     - Created by Makefile to store intermediate files
+     |___ src        - Source files
+     |___ .cproject  - Eclipse C project file
+     |___ .project   - Eclipse project file
+     \___ Makefile
+   
+   Pre-request:
+   a. Install Eclipse
+   b. Install SDCC
+   c. Install MingWin
+   d. Has following applications in search path
+      - packihx
+      - hex2bin
+   
+   References:
+     - SDCC
+       http://sourceforge.net/projects/sdcc/files/
+     - eclipseSDCC
+       http://sourceforge.net/projects/eclipse-sdcc/
+     - MinGW
+       http://sourceforge.net/projects/mingw/files/MinGW/

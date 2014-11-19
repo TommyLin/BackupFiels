@@ -1,0 +1,96 @@
+# ENE Technology Inc.
+# Directory information
+# src => source files location(Auto included to makefile)
+# inc => header files location
+
+CC	:= sdcc
+INC	+= -I"./inc"
+CFLAGS	:= --model-small
+LDFLAGS	:= --code-size 0x8000 --xram-loc 0x8000 --xram-size 2048
+LIBS	:=
+
+ODIR	= output
+
+SUBDIRS	:= src
+
+C_SRCS	= $(shell ls $(SUBDIRS)/*.c)
+C_OBJS	= $(subst .c,.rel,$(C_SRCS))
+C_RELS	= $(subst $(SUBDIRS),$(ODIR)/$(SUBDIRS),$(C_OBJS))
+C_DEPS	= $(subst .rel,.d,$(C_RELS))
+
+YEARMONTH  = `date +'%Y-%b'`
+DATETIME   = `date +'%Y-%m%d-%H%M%S-%a'`
+BACKUP_DIR = hex/$(YEARMONTH)
+
+
+# Please add "PROJNAME" environment variable to Eclipse project properties.
+# Project -> Properties -> C/C++ Build -> Environment -> Add
+#   Name: PROJNAME
+#   Value: ${ProjName}
+#   (V) Add to all configurations
+ifeq "$(PROJNAME)" ""
+	PROJNAME = default
+endif
+
+OFILE	= $(ODIR)/$(PROJNAME)
+
+
+ifneq ($(MAKECMDGOALS),clean)
+ifneq ($(strip $(C_DEPS)),)
+-include $(C_DEPS)
+endif
+endif
+
+
+all: $(OFILE).ihx
+
+
+$(OFILE).ihx: $(C_RELS)
+	@echo 'Building target: $@'
+	$(CC) $(LDFLAGS) -o $@ $(C_RELS) $(LIBS)
+	@echo 'Finished building target: $@'
+	@echo ''
+	$(MAKE) --no-print-directory post-build
+
+
+PREPARE_DIR:
+	@if [ ! -d ./$(ODIR)/$(SUBDIRS) ]; then \
+		mkdir -p $(ODIR)/$(SUBDIRS); \
+	fi
+
+
+$(ODIR)/%.rel: %.c | PREPARE_DIR
+	@echo 'Building file: $<'
+	sdcpp -I"C:/Program Files/SDCC/include" $(INC) $< -o $(@:%.rel=%.i) -D__SDCC 
+#	sdcpp $(INC) -I"C:/Program Files/SDCC/include" $< -o $(@:%.rel=%.ikeil)
+	$(CC) -c $(INC) $(CFLAGS) -o $@ $< && \
+	echo -n $(@:%.rel=%.d) $(dir $@) > $(@:%.rel=%.d) && \
+	$(CC) -c -MM $(INC) $(CFLAGS) $< >> $(@:%.rel=%.d)
+	@echo 'Finished building: $<'
+	@echo ''
+
+
+post-build:
+	@packihx $(OFILE).ihx > $(OFILE).hex
+	@hex2bin -p 00 "$(OFILE).hex"
+	@if [ ! -d ./$(BACKUP_DIR) ]; then \
+		mkdir -p $(BACKUP_DIR); \
+	fi
+	@cp -v $(OFILE).hex $(BACKUP_DIR)/$(PROJNAME)-$(DATETIME)-sdcc.hex
+#	@cp -v $(OFILE).bin $(BACKUP_DIR)/$(PROJNAME)-$(DATETIME)-sdcc.bin
+
+
+# A phony target is simply a target that is always out-of-date
+.PHONY: all clean distclean PREPARE_DIR
+.SECONDARY: post-build
+
+
+# Delete the binary files generated from sources
+clean:
+	-rm -rf $(ODIR)/$(SUBDIRS)/*
+	-rm -rf $(ODIR)/*.lk $(ODIR)/*.map $(ODIR)/*.mem $(OFILE).ihx $(OFILE).hex $(OFILE).bin
+
+
+# Delete all the generated files that were not in the original source distribution
+distclean: clean
+	-rm -rf $(ODIR)/*
