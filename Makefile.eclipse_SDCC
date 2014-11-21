@@ -8,6 +8,9 @@ INC	+= -I"./inc"
 CFLAGS	:= --model-small
 LDFLAGS	:= --code-size 0x8000 --xram-loc 0x8000 --xram-size 2048
 LIBS	:=
+LINT	:= C:/splint-3.1.2/bin/splint.exe
+LINT_INC:= -I"../lint-inc" $(INC)
+LINT_OPT:= +charint
 
 ODIR	= output
 
@@ -74,6 +77,10 @@ preprocessor: $(C_PREP)
 $(ODIR)/%.i: %.c | PREPARE_DIR
 	sdcpp -D__SDCC -I"C:/Program Files/SDCC/include" $(INC) $< -o $@
 #	sdcpp          -I"C:/Program Files/SDCC/include" $(INC) $< -o $(@:%.i=%.keil)
+
+
+lint:
+	$(LINT) $(LINT_OPT) $(LINT_INC) src/*.c
 
 
 post-build:
